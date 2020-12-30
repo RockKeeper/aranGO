@@ -1,4 +1,4 @@
-module github.com/RockKeeper/aranGO/tree/v2
+module gopkg.in/RockKeeper/aranGO.v2
 
 go 1.15
 
