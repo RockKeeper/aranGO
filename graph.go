@@ -2,7 +2,7 @@ package aranGO
 
 import (
 	"errors"
-	"gopkg.in/diegogub/aranGO.v2/aql"
+	"github.com/RockKeeper/aranGO/tree/v2/aql"
 )
 
 // Graph structure

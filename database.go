@@ -2,9 +2,10 @@ package aranGO
 
 import (
 	"errors"
-	"gopkg.in/diegogub/aranGO.v2/aql"
 	"regexp"
 	"time"
+
+	"github.com/RockKeeper/aranGO/tree/v2/aql"
 )
 
 // Database struct
@@ -180,7 +181,7 @@ func (db Database) Col(name string) *Collection {
 	panic(errMsg)
 }
 
-func validColName(name string) error {
+func ValidColName(name string) error {
 	reg, err := regexp.Compile(`^[A-z]+[0-9\-_]*`)
 
 	if err != nil {
@@ -196,7 +197,7 @@ func validColName(name string) error {
 // Create collections
 func (d *Database) CreateCollection(c *CollectionOptions) error {
 
-	err := validColName(c.Name)
+	err := ValidColName(c.Name)
 	if err != nil {
 		return err
 	}

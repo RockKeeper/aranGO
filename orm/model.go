@@ -3,11 +3,13 @@ package orm
 import (
 	"encoding/json"
 	"errors"
-	"github.com/diegogub/aranGO"
 	"reflect"
 	"strings"
 	"sync"
 	"time"
+
+	aranGO "github.com/RockKeeper/aranGO/tree/v2"
+	aql "github.com/RockKeeper/aranGO/tree/v2/aql"
 )
 
 type Error map[string]string
@@ -25,7 +27,7 @@ type Context struct {
 	Err  Error
 }
 
-func NewContext(db *Database) (*Context, error) {
+func NewContext(db *aranGO.Database) (*Context, error) {
 	if db == nil {
 		return nil, errors.New("Invalid DB")
 	}
@@ -235,10 +237,10 @@ func (c *Context) Delete(m Modeler) Error {
 	return c.Err
 }
 
-func Unique(m interface{}, db *Database, update bool, err Error) {
+func Unique(m interface{}, db *aranGO.Database, update bool, err Error) {
 	val := Tags(m, "unique")
 	var uniq bool
-	fvalue := reflectValue(m)
+	fvalue := aql.ReflectValue(m)
 	for fname, col := range val {
 		field := fvalue.FieldByName(fname)
 		fty := fvalue.Type()
@@ -248,7 +250,7 @@ func Unique(m interface{}, db *Database, update bool, err Error) {
 				unique(field, val, db, &uniq, update, err)
 			} else {
 				// validate collection name!!!!
-				validName := validColName(col)
+				validName := aranGO.ValidColName(col)
 				if col == "-" || col == "" || validName != nil {
 					err["colname"] = "Invalid collection name in unique tag"
 					return
@@ -268,9 +270,9 @@ func Unique(m interface{}, db *Database, update bool, err Error) {
 	}
 }
 
-func unique(m reflect.Value, val map[string]string, db *Database, uniq *bool, update bool, err Error) {
+func unique(m reflect.Value, val map[string]string, db *aranGO.Database, uniq *bool, update bool, err Error) {
 	for fname, col := range val {
-		field := reflectValue(m).FieldByName(fname)
+		field := aql.ReflectValue(m).FieldByName(fname)
 		ftype, ok := field.Type().FieldByName(fname)
 		if ok {
 			if ftype.Anonymous && ftype.Type.Kind() == reflect.Struct {
@@ -291,7 +293,7 @@ func unique(m reflect.Value, val map[string]string, db *Database, uniq *bool, up
 	}
 }
 
-func Validate(m interface{}, db *Database, col string, update bool, err Error) {
+func Validate(m interface{}, db *aranGO.Database, col string, update bool, err Error) {
 	checkRequired(m, err)
 	checkEnum(m, err)
 	Unique(m, db, update, err)
@@ -299,7 +301,7 @@ func Validate(m interface{}, db *Database, col string, update bool, err Error) {
 	val := Tags(m, "sub")
 	if len(val) > 0 {
 		for fname, _ := range val {
-			field := reflectValue(m).FieldByName(fname)
+			field := aql.ReflectValue(m).FieldByName(fname)
 			// All sub structures are not Models
 			validate(field.Interface(), db, col, update, err)
 		}
@@ -307,7 +309,7 @@ func Validate(m interface{}, db *Database, col string, update bool, err Error) {
 	return
 }
 
-func validate(m interface{}, db *Database, col string, update bool, err Error) {
+func validate(m interface{}, db *aranGO.Database, col string, update bool, err Error) {
 	checkRequired(m, err)
 	checkEnum(m, err)
 	Unique(m, db, update, err)
@@ -315,7 +317,7 @@ func validate(m interface{}, db *Database, col string, update bool, err Error) {
 	val := Tags(m, "sub")
 	if len(val) > 0 {
 		for fname, _ := range val {
-			field := reflectValue(m).FieldByName(fname)
+			field := aql.ReflectValue(m).FieldByName(fname)
 			// All sub structures are not Models
 			validate(field.Interface(), db, col, update, err)
 		}
@@ -323,7 +325,7 @@ func validate(m interface{}, db *Database, col string, update bool, err Error) {
 	return
 }
 
-func checkUnique(m interface{}, db *Database, update bool, err Error) {
+func checkUnique(m interface{}, db *aranGO.Database, update bool, err Error) {
 }
 
 func checkRequired(m interface{}, err Error) {
@@ -333,7 +335,7 @@ func checkRequired(m interface{}, err Error) {
 			if !checkField(m, fname) { // if don't
 				err[fname] = "required"
 			} else {
-				field := reflectValue(m).FieldByName(fname)
+				field := aql.ReflectValue(m).FieldByName(fname)
 				jname := Tag(m, fname, "json")
 				// check if it's empty, depending on Kind
 				switch field.Kind() {
@@ -363,7 +365,7 @@ func checkRequired(m interface{}, err Error) {
 func checkEnum(m interface{}, err Error) {
 	enumFields := Tags(m, "enum")
 	if len(enumFields) > 0 {
-		field := reflectValue(m)
+		field := aql.ReflectValue(m)
 		valid := false
 		for fname, enuml := range enumFields {
 			enumValues := strings.Split(enuml, ",")
@@ -389,7 +391,7 @@ func checkEnum(m interface{}, err Error) {
 }
 
 func checkField(m interface{}, fname string) bool {
-	field := reflectValue(m).FieldByName(fname)
+	field := aql.ReflectValue(m).FieldByName(fname)
 	if field == reflect.ValueOf(nil) {
 		return false
 	}
@@ -412,7 +414,7 @@ func Tags(obj interface{}, key string) map[string]string {
 
 	var tag string
 
-	objValue := reflectValue(obj)
+	objValue := aql.ReflectValue(obj)
 	objType := objValue.Type()
 	fieldsCount := objType.NumField()
 	tags := make(map[string]string)
@@ -459,7 +461,7 @@ func setTimes(obj interface{}, action string) {
 	if len(timeFields) > 0 {
 		for fname, val := range timeFields {
 			if val == action {
-				f := reflectValue(obj).FieldByName(fname)
+				f := aql.ReflectValue(obj).FieldByName(fname)
 				switch f.Kind() {
 				case reflect.Int64:
 					t := time.Now().Unix() * 1000
@@ -489,7 +491,7 @@ type Relation struct {
 	Error   bool                   `json:"error" `
 	Update  bool                   `json:"update"`
 
-	Db *Database
+	Db *aranGO.Database
 }
 
 type ObjTran struct {
@@ -555,7 +557,7 @@ func (a *Relation) Commit() error {
     }
   `
 
-	trx := NewTransaction(q, col, nil)
+	trx := aranGO.NewTransaction(q, col, nil)
 	trx.Params = map[string]interface{}{"act": a}
 	err := trx.Execute(a.Db)
 	// Tedious unmarshaling. I should map, maps => struct
