@@ -1,4 +1,4 @@
-module gopkg.in/RockKeeper/aranGO.v2
+module gopkg.in/RockKeeper/aranGO.v3
 
 go 1.15
 

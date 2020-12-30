@@ -3,7 +3,7 @@ package aranGO
 import (
 	"errors"
 
-	"gopkg.in/RockKeeper/aranGO.v2/aql"
+	"gopkg.in/RockKeeper/aranGO.v3/aql"
 )
 
 // Graph structure

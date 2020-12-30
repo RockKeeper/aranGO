@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"time"
 
-	"gopkg.in/RockKeeper/aranGO.v2/aql"
+	"gopkg.in/RockKeeper/aranGO.v3/aql"
 )
 
 // Database struct

@@ -8,8 +8,8 @@ import (
 	"sync"
 	"time"
 
-	aranGO "gopkg.in/RockKeeper/aranGO.v2"
-	aql "gopkg.in/RockKeeper/aranGO.v2/aql"
+	aranGO "gopkg.in/RockKeeper/aranGO.v3"
+	aql "gopkg.in/RockKeeper/aranGO.v3/aql"
 )
 
 type Error map[string]string
